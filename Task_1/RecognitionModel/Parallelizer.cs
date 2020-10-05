@@ -1,10 +1,7 @@
 using System;
-using System.Reflection;
-using System.Linq;
 using System.Threading;
-using System.Collections.Concurrent;
+using System.Linq;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace RecognitionModel
 {
@@ -18,7 +15,6 @@ namespace RecognitionModel
     public class Parallelizer
     {
         static CancellationTokenSource cts = new CancellationTokenSource();
-        static ConcurrentQueue<string> queue = new ConcurrentQueue<string>();
         
         IProcess model;
         public event OutputHandler OutputEvent;
@@ -34,33 +30,42 @@ namespace RecognitionModel
             cts.Cancel();
         }
 
-        public void Run(string Path)
+        public void Run(string DirPath)
         {
+
             cts = new CancellationTokenSource();
 
-            string[] Images = Directory.GetFiles(Path);
-            foreach(string path in Images)
-                queue.Enqueue(path);
+            string[] Files = Directory.GetFiles(DirPath);
 
             Thread[] threads = new Thread[Environment.ProcessorCount];
 
+            int processed = -1;
+
             for (int i = 0; i < Environment.ProcessorCount; i++)
             {
-                threads[i] = new Thread(()=> 
+                threads[i] = new Thread(()=>
                 {
-                    
-                    string ImgPath;
-                    while(!queue.IsEmpty && !cts.Token.IsCancellationRequested)
-                        if(queue.TryDequeue(out ImgPath))
+                    int FileNum;
+
+                    while(!cts.Token.IsCancellationRequested)
+                    {
+
+                        FileNum=Interlocked.Increment(ref processed);
+                        if(FileNum >= Files.Count())
+                            break;
+                        else
                         {
-                            object output = model.ProcessFile(ImgPath);
-                            OutputEvent?.Invoke(this,ImgPath,output);
+                            object output = model.ProcessFile(Files[FileNum]);
+                            OutputEvent?.Invoke(this, Files[FileNum], output);
 
                         }
+                    }
+
 
                 });
                 threads[i].Start();
             }
+
              for (int i = 0; i < Environment.ProcessorCount; i++)
             {
                 threads[i].Join();
