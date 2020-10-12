@@ -1,14 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using RecognitionModel;
-using System.Threading;
-using SixLabors.ImageSharp; // Из одноимённого пакета NuGet
-using SixLabors.ImageSharp.PixelFormats;
 using System.Linq;
-using SixLabors.ImageSharp.Processing;
-using Microsoft.ML.OnnxRuntime.Tensors;
-using Microsoft.ML.OnnxRuntime;
-using System.Collections.Generic;
 
 namespace Main
 {

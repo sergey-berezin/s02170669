@@ -22,7 +22,6 @@ namespace RecognitionModel
         public Parallelizer(IProcess model)
         {
             this.model = model;
-            Console.CancelKeyPress += new ConsoleCancelEventHandler((s, args)=>{args.Cancel = true; cts.Cancel();});
         }
 
         public void Stop()
