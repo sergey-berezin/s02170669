@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace ViewModel
 {
-    class RelayCommand: ICommand
+    class RelayCommand : ICommand
     {
         private Predicate<object> _canExecute;
         private Action<object> _execute;

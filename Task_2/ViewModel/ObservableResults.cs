@@ -39,7 +39,7 @@ namespace ViewModel
             this.info = info;
         }
     }
-    public class Results: INotifyPropertyChanged
+    public class Results : INotifyPropertyChanged
     {
         private string class_name;
 
@@ -102,14 +102,14 @@ namespace ViewModel
 
     }
 
-    public class ObservableResults: ObservableCollection<Results>
+    public class ObservableResults : ObservableCollection<Results>
     {
         public void Add_Result(string Class_Name, string ImagePath, string ImageInfo)
         {
-            
-            foreach(var Result in base.Items)
+
+            foreach (var Result in base.Items)
             {
-                if(Result.Class_Name.Equals(Class_Name))
+                if (Result.Class_Name.Equals(Class_Name))
                 {
                     base[base.IndexOf(Result)].Count += 1;
                     base[base.IndexOf(Result)].Images.Add(new Image(ImagePath, ImageInfo));

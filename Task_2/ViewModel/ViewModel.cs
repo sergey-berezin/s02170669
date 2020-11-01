@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System;
 using System.Threading.Tasks;
-using Model;
+using RecognitionModel;
 using System.Windows.Input;
 using System.Collections.ObjectModel;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.ComponentModel;
 using System.IO;
@@ -19,15 +15,9 @@ namespace ViewModel
 
         Dispatcher GetDispatcher();
 
-        //List<object> SelectedItems();
-
-        //string OpenPath();
-
-        //bool WantToSave();
-
     }
-    
-    public class ViewModel: INotifyPropertyChanged
+
+    public class ViewModel : INotifyPropertyChanged
     {
 
         public ViewModel(IUIServises uiServices)
@@ -38,20 +28,20 @@ namespace ViewModel
 
             startCommand = new RelayCommand(_ => !Running,
                                             async _ =>
-                                           {
-                                               string path = uiServices.OpenPath();
-                                               if (path != null)
-                                               {
-                                                   results.Clear();
-                                                   images.Clear();
+                                            {
+                                                string path = uiServices.OpenPath();
+                                                if (path != null)
+                                                {
+                                                    results.Clear();
+                                                    images.Clear();
 
-                                                   Running = true;
+                                                    Running = true;
 
-                                                   await Task.Run(() => ModelParallelizer.Run(path));
+                                                    await Task.Run(() => ModelParallelizer.Run(path));
 
-                                                   Running = false;
-                                               }
-                                           }
+                                                    Running = false;
+                                                }
+                                            }
                                            );
 
             stopCommand = new RelayCommand(_ => Running,
@@ -66,7 +56,7 @@ namespace ViewModel
 
         private bool Running = false;
 
-        private static Recognizer MnistRecognizer = new Recognizer(ModelPath:Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName+"\\Model\\mnist-8.onnx");
+        private static Model MnistRecognizer = new Model(ModelPath: Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\Task_1\\RecognitionModel\\mnist-8.onnx");
 
         private static Parallelizer ModelParallelizer = new Parallelizer(MnistRecognizer);
 
@@ -87,7 +77,7 @@ namespace ViewModel
             set
             {
                 selectedclass = value;
-                if(selectedclass != null)
+                if (selectedclass != null)
                     SelectedImages = selectedclass.Images;
             }
         }

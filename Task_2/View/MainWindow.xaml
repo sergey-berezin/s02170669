@@ -26,9 +26,9 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        
+
         <Label Content="Images" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="548,19,0,0" Width="51"/>
-        
+
         <ListView x:Name="ListView_Classes"  HorizontalAlignment="Left" Height="355" Margin="36,45,0,0" VerticalAlignment="Top" Width="330" SelectionMode="Single" SelectedItem="{Binding SelectedClass}" ItemsSource="{Binding Results}">
             <ListView.View>
                 <GridView>
