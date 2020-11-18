@@ -29,12 +29,11 @@ namespace RecognitionModel
             cts.Cancel();
         }
 
-        public void Run(string DirPath)
+        public void Run(string[] Files)
         {
 
             cts = new CancellationTokenSource();
 
-            string[] Files = Directory.GetFiles(DirPath);
 
             Thread[] threads = new Thread[Environment.ProcessorCount];
 
