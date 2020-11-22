@@ -5,18 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:View"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="1350">
     <Grid>
         <Menu Height="20" VerticalAlignment="Top" Background="#FFB3D7D7" Margin="0,0,0.333,0">
 
             <MenuItem Header="Start Recognition" Command="{Binding StartCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Stop Recognition" Command="{Binding StopCommand}" CommandParameter="FromMenuItem"/>
+            <MenuItem Header="Clear DataBase" Command="{Binding ClearCommand}" CommandParameter="FromMenuItem"/>
+            <MenuItem Header="Show Statistics" Command="{Binding StatsCommand}" CommandParameter="FromMenuItem"/>
 
         </Menu>
 
-        <Label Content="Recognized Classes" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="136,19,0,0" Width="119"/>
+        <Label Content="Recognized Classes" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="174,19,0,0" Width="119"/>
 
-        <ListBox x:Name="ListBox_Images"  HorizontalAlignment="Left" Height="355" Margin="409,45,0,0" VerticalAlignment="Top" Width="330" SelectionMode="Single" ItemsSource="{Binding SelectedImages}">
+        <ListBox x:Name="ListBox_Images"  HorizontalAlignment="Left" Height="355" Margin="450,45,0,0" VerticalAlignment="Top" Width="350" SelectionMode="Single" ItemsSource="{Binding SelectedImages}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -27,18 +29,30 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <Label Content="Images" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="548,19,0,0" Width="51"/>
+        <Label Content="Images" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="601,19,0,0" Width="51"/>
 
-        <ListView x:Name="ListView_Classes"  HorizontalAlignment="Left" Height="355" Margin="36,45,0,0" VerticalAlignment="Top" Width="330" SelectionMode="Single" SelectedItem="{Binding SelectedClass}" ItemsSource="{Binding Results}">
+        <ListView x:Name="ListView_Classes"  HorizontalAlignment="Left" Height="355" Margin="50,45,0,0" VerticalAlignment="Top" Width="350" SelectionMode="Single" SelectedItem="{Binding SelectedClass}" ItemsSource="{Binding Results}">
             <ListView.View>
                 <GridView>
                     <GridView.Columns>
-                        <GridViewColumn Header="Class" DisplayMemberBinding="{Binding Path=Class_Name}" Width="200"></GridViewColumn>
+                        <GridViewColumn Header="Class" DisplayMemberBinding="{Binding Path=Class_Name}" Width="220"></GridViewColumn>
                         <GridViewColumn Header="Count" DisplayMemberBinding="{Binding Path=Count}" Width="130"></GridViewColumn>
                     </GridView.Columns>
                 </GridView>
             </ListView.View>
         </ListView>
+
+        <ListView x:Name="ListView_Statistics"  HorizontalAlignment="Left" Height="355" Margin="850,45,0,0" VerticalAlignment="Top" Width="450" SelectionMode="Single" ItemsSource="{Binding StatisticResults}">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn Header="Image Path" DisplayMemberBinding="{Binding Path=Path}" Width="340"></GridViewColumn>
+                        <GridViewColumn Header="Num of Requests" DisplayMemberBinding="{Binding Path=NumOfRequests}" Width="110"></GridViewColumn>
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Label Content="Statistics" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="1064,19,0,0" Width="51"/>
 
     </Grid>
 </Window>

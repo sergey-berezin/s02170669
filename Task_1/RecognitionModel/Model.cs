@@ -10,6 +10,10 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 using Microsoft.ML.OnnxRuntime;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using SQL;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace RecognitionModel
 {
@@ -52,18 +56,32 @@ namespace RecognitionModel
         public object ProcessFile(object obj)
         {
             string ImgPath = obj as string;
-            Image<Rgb24> image;
 
-            try
+            byte[] ByteImage = File.ReadAllBytes(ImgPath);
+            string hash = Hash.GetHash(ByteImage);
+
+            using (var db = new LibraryContext())
             {
-                image = Image.Load<Rgb24>(ImgPath);
+
+                foreach (var imageclass in db.ImageClasses.Include(a => a.Images))
+                {
+                    foreach (var img in imageclass.Images)
+                        if (Hash.VerifyHash(hash, img.ImageHash))
+                        {
+                            db.Entry(img).Reference(a => a.ByteImage).Load();
+                            if (Hash.ByteArrayCompare(ByteImage, img.ByteImage.Img))
+                            {
+                                img.NumOfRequests += 1;
+                                SaveDataBaseConcurrent(db, null);
+                                
+                                return (imageclass.ClassName, img.Prob);
+                            }
+                        }
+                }
+
             }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.GetType()+" : "+ex.Message);
-                return null;
-            }
-            
+            using Image<Rgb24> image =  Image.Load<Rgb24>(ByteImage);
+
             const int TargetWidth = 28;
             const int TargetHeight = 28;
 
@@ -99,10 +117,91 @@ namespace RecognitionModel
             var softmax = output.Select(x => (float)Math.Exp(x) / sum);
 
             float maxValue = softmax.Max();
-            int maxIndex = softmax.ToList().IndexOf(maxValue);
+            string maxClass = softmax.ToList().IndexOf(maxValue).ToString();
 
-            return (maxIndex, maxValue);
+            using (var db = new LibraryContext())
+            {
+                var NewImage = new ImageInfo() { ClassName = maxClass, Prob = maxValue, Path = ImgPath, NumOfRequests = 0, ImageHash =hash, ByteImage = new ImageFile { Img = ByteImage } };
+                NewImage.ImageClasses = new List<ImageClass>();
+
+                var ClassNum = db.ImageClasses.Where(a => a.ClassName == maxClass).FirstOrDefault();
+
+                if (ClassNum != null)
+                {
+                    NewImage.ImageClasses.Add(ClassNum);
+                    ClassNum.Images = new List<ImageInfo>();
+                    ClassNum.Images.Add(NewImage);
+
+                    db.Add(NewImage);
+                }
+                else
+                {
+                    var NewClass = new ImageClass() { ClassName = maxClass};
+
+                    NewImage.ImageClasses.Add(NewClass);
+
+                    NewClass.Images = new List<ImageInfo>();
+                    NewClass.Images.Add(NewImage);
+
+                    db.Add(NewClass);
+                    db.Add(NewImage);
+
+                }
+                db.SaveChanges();
+            }
+
+            return (maxClass, maxValue);
             
+        }
+
+        public void ClearDataBase()
+        {
+            using (var db = new LibraryContext())
+            {
+                db.ImageClasses.RemoveRange(db.ImageClasses.AsEnumerable());
+                db.Images.RemoveRange(db.Images.AsEnumerable());
+                db.SaveChanges();
+            }
+        }
+
+        public List<ImageInfo> GetModelStatistics()
+        {
+            List <ImageInfo> ImageList = new List<ImageInfo>();
+            using (var db = new LibraryContext())
+            {
+                foreach(var img in db.Images)
+                {
+                    ImageList.Add(img);
+                }
+            }
+            return ImageList;
+        }
+
+        static private void SaveDataBaseConcurrent(LibraryContext db, IReadOnlyList<EntityEntry> entries)
+        {
+            if (entries != null)
+            {
+                foreach (var entry in entries)
+                {
+                    if (entry.Entity is ImageInfo)
+                    {
+                        var proposedValues = entry.CurrentValues;
+                        var databaseValues = entry.GetDatabaseValues();
+
+                        proposedValues["NumOfRequests"] = (int)databaseValues["NumOfRequests"] + 1;
+
+                        entry.OriginalValues.SetValues(databaseValues);
+                    }
+                }
+            }
+            try
+            {
+                db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException exc)
+            {
+                SaveDataBaseConcurrent(db, exc.Entries);
+            }
         }
 
     }
