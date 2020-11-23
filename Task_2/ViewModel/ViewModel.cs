@@ -6,6 +6,8 @@ using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using System.ComponentModel;
 using System.IO;
+using SQL;
+using System.Collections.Generic;
 
 namespace ViewModel
 {
@@ -51,6 +53,19 @@ namespace ViewModel
                                                Running = false;
                                            }
                                            );
+            clearCommand = new RelayCommand(_ => true,
+                                           _ =>
+                                           {
+                                               MnistRecognizer.ClearDataBase();
+                                           }
+                                           );
+            statsCommand = new RelayCommand(_ => true,
+                                          async _ =>
+                                          {
+                                              await Task.Run(() => StatisticResults = MnistRecognizer.GetModelStatistics());
+                                              PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatisticResults"));
+                                          }
+                                          );
         }
 
 
@@ -65,6 +80,8 @@ namespace ViewModel
         private static Results selectedclass = new Results(null, null, null);
 
         private static ObservableCollection<Image> images = new ObservableCollection<Image>();
+
+        public List<ImageInfo> StatisticResults { get; set; }
 
 
         public Results SelectedClass
@@ -104,26 +121,29 @@ namespace ViewModel
 
 
 
-
+        public event PropertyChangedEventHandler PropertyChanged;
         private IUIServises uiServices;
 
         private readonly ICommand stopCommand;
         public ICommand StopCommand { get { return stopCommand; } }
 
         private readonly ICommand startCommand;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public ICommand StartCommand { get { return startCommand; } }
+
+        private readonly ICommand clearCommand;
+        public ICommand ClearCommand { get { return clearCommand; } }
+
+        private readonly ICommand statsCommand;
+        public ICommand StatsCommand { get { return statsCommand; } }
 
         public void Output(object sender, params object[] result)
         {
             string ImagePath = (string)result[0];
-            (int class_name, float prob) = ((int, float))result[1];
+            (string class_name, float prob) = ((string, float))result[1];
 
             this.uiServices.GetDispatcher().BeginInvoke(new Action(() =>
             {
-                results.Add_Result(class_name.ToString(), ImagePath, prob.ToString());
+                results.Add_Result(class_name, ImagePath, prob.ToString());
             }));
 
 

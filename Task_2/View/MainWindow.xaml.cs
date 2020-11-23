@@ -42,5 +42,6 @@ namespace View
         {
             return this.dispatcher;
         }
+
     }
 }
