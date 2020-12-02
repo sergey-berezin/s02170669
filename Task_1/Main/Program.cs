@@ -9,10 +9,10 @@ namespace Main
 {
     class Program
     {
-        public static void ConsoleOutput(object sender, params object[] result)
+        public static void ConsoleOutput(object sender, string input, (string, float) result)
         {
-            string ImagePath = (string) result[0];
-            (string clas, float prob) = ((string, float)) result[1];
+            string ImagePath = input;
+            (string clas, float prob) = result;
             Console.WriteLine($"{ImagePath} belongs to class {clas} with prob. - {prob}");
 
         }
@@ -23,7 +23,7 @@ namespace Main
             Stopwatch sw = new Stopwatch();
 
             sw.Start();
-            Parallelizer ModelParallelizer = new Parallelizer(MnistModel);
+            Parallelizer<(string,float)> ModelParallelizer = new Parallelizer<(string, float)>(MnistModel);
             ModelParallelizer.OutputEvent += ConsoleOutput;
             ModelParallelizer.Run(args.FirstOrDefault() ?? "images");
             sw.Stop();

@@ -73,7 +73,7 @@ namespace ViewModel
 
         private static Model MnistRecognizer = new Model(ModelPath: Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\Task_1\\RecognitionModel\\mnist-8.onnx");
 
-        private static Parallelizer ModelParallelizer = new Parallelizer(MnistRecognizer);
+        private static Parallelizer<(string,float)> ModelParallelizer = new Parallelizer<(string,float)>(MnistRecognizer);
 
         private static ObservableResults results = new ObservableResults();
 
@@ -136,10 +136,10 @@ namespace ViewModel
         private readonly ICommand statsCommand;
         public ICommand StatsCommand { get { return statsCommand; } }
 
-        public void Output(object sender, params object[] result)
+        public void Output(object sender, string input, (string,float) result)
         {
-            string ImagePath = (string)result[0];
-            (string class_name, float prob) = ((string, float))result[1];
+            string ImagePath = input;
+            (string class_name, float prob) = result;
 
             this.uiServices.GetDispatcher().BeginInvoke(new Action(() =>
             {

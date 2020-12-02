@@ -6,20 +6,21 @@ using System.IO;
 namespace RecognitionModel
 {
 
-    public delegate void OutputHandler(object sender, params object[] args);
-    public interface IProcess
+    public delegate void OutputHandler<Out>(object sender, string input, Out result);
+    public interface IProcess <In,Out>
     {
-        object ProcessFile(object Obj);
+        Out ProcessFile(In Input);
+
     }
 
-    public class Parallelizer
+    public class Parallelizer <Out>
     {
         static CancellationTokenSource cts = new CancellationTokenSource();
         
-        IProcess model;
-        public event OutputHandler OutputEvent;
+        IProcess<string,Out> model;
+        public event OutputHandler<Out> OutputEvent;
 
-        public Parallelizer(IProcess model)
+        public Parallelizer(IProcess<string,Out> model)
         {
             this.model = model;
         }
@@ -31,15 +32,17 @@ namespace RecognitionModel
 
         public void Run(string Path)
         {
+            int NumOfThreads = Environment.ProcessorCount;
 
             cts = new CancellationTokenSource();
+
             string[] Files = Directory.GetFiles(Path);
 
-            Thread[] threads = new Thread[Environment.ProcessorCount];
+            Thread[] threads = new Thread[NumOfThreads];
 
             int processed = -1;
 
-            for (int i = 0; i < Environment.ProcessorCount; i++)
+            for (int i = 0; i < NumOfThreads; i++)
             {
                 threads[i] = new Thread(()=>
                 {
@@ -53,7 +56,7 @@ namespace RecognitionModel
                             break;
                         else
                         {
-                            object output = model.ProcessFile(Files[FileNum]);
+                            Out output = model.ProcessFile(Files[FileNum]);
                             OutputEvent?.Invoke(this, Files[FileNum], output);
 
                         }
@@ -64,7 +67,7 @@ namespace RecognitionModel
                 threads[i].Start();
             }
 
-             for (int i = 0; i < Environment.ProcessorCount; i++)
+             for (int i = 0; i < NumOfThreads; i++)
             {
                 threads[i].Join();
             }

@@ -17,7 +17,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace RecognitionModel
 {
-    public class Model: IProcess
+    public class Model: IProcess<string,(string,float)>
     {
 
         string modelpath;
@@ -53,30 +53,38 @@ namespace RecognitionModel
             this.session = new InferenceSession(modelpath);
         }
 
-        public object ProcessFile(object obj)
+        public (string,float) ProcessFile(string ImgPath)
         {
-            string ImgPath = obj as string;
 
             byte[] ByteImage = File.ReadAllBytes(ImgPath);
             string hash = Hash.GetHash(ByteImage);
 
             using (var db = new LibraryContext())
             {
-
+                string name = "";
+                float prob = 0;
                 foreach (var imageclass in db.ImageClasses.Include(a => a.Images))
                 {
                     foreach (var img in imageclass.Images)
                         if (Hash.VerifyHash(hash, img.ImageHash))
                         {
+                            img.NumOfRequests += 1; 
                             db.Entry(img).Reference(a => a.ByteImage).Load();
                             if (Hash.ByteArrayCompare(ByteImage, img.ByteImage.Img))
                             {
-                                img.NumOfRequests += 1;
-                                SaveDataBaseConcurrent(db, null);
+                                name = imageclass.ClassName;
+                                prob = img.Prob;
+                                break;
                                 
-                                return (imageclass.ClassName, img.Prob);
                             }
                         }
+                    if (name != "") break;
+                }
+
+                if (name != "")
+                {
+                    SaveDataBaseConcurrent(db, null);
+                    return (name, prob);
                 }
 
             }
@@ -158,8 +166,8 @@ namespace RecognitionModel
         {
             using (var db = new LibraryContext())
             {
-                db.ImageClasses.RemoveRange(db.ImageClasses.AsEnumerable());
-                db.Images.RemoveRange(db.Images.AsEnumerable());
+                db.ImageClasses.RemoveRange(db.ImageClasses);
+                db.Images.RemoveRange(db.Images);
                 db.SaveChanges();
             }
         }
@@ -196,7 +204,7 @@ namespace RecognitionModel
             }
             try
             {
-                db.SaveChangesAsync();
+                db.SaveChanges();
             }
             catch (DbUpdateConcurrencyException exc)
             {
