@@ -21,11 +21,23 @@ namespace RecognitionModel
         static CancellationTokenSource cts = new CancellationTokenSource();
         
         IProcess<In,Out> model;
-        public event OutputHandler<In, Out> OutputEvent;
-
-        public Parallelizer(IProcess<In,Out> model)
+        public event OutputHandler<Out> OutputEvent;
+        bool useServer;
+        public bool UseServer
         {
-            this.model = model;
+            get
+            {
+                return useServer;
+            }
+            set
+            {
+                useServer = value;
+            }
+        }
+        public Parallelizer(IProcess<In,Out> Model, bool UseServer=false)
+        {
+            this.model = Model;
+            this.useServer = UseServer;
         }
 
         public void Stop()
@@ -59,7 +71,8 @@ namespace RecognitionModel
                         else
                         {
                             Out output = model.ProcessFile(Files[FileNum]);
-                            OutputEvent?.Invoke(this, Files[FileNum], output);
+                            if(!UseServer)
+                                OutputEvent?.Invoke(this, output);
                             queue.Enqueue(output);
 
                         }

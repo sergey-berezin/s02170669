@@ -163,6 +163,7 @@ namespace RecognitionModel
             Img.NumOfRequests = 0;
             Img.ClassName = maxClass;
             Img.Prob = maxValue;
+
             return Img;
             
         }

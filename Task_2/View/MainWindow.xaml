@@ -10,10 +10,12 @@
     <Grid>
         <Menu Height="20" VerticalAlignment="Top" Background="#FFB3D7D7" Margin="0,0,0.333,0">
 
+            <CheckBox Content="Use Server" IsChecked="{Binding Path=UseServer}" Margin="0,1,0,0"/>
             <MenuItem Header="Start Recognition" Command="{Binding StartCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Stop Recognition" Command="{Binding StopCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Clear DataBase" Command="{Binding ClearCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Show Statistics" Command="{Binding StatsCommand}" CommandParameter="FromMenuItem"/>
+            <ProgressBar Height="10" Value="{Binding Path= Progress}"  Width="100" Margin="0,3,0,0" x:Name="Pbar" IsIndeterminate="{Binding Path=IndeterminedPBar}"/>
 
         </Menu>
 

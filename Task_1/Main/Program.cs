@@ -7,31 +7,56 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Newtonsoft.Json;
+using ImageContracts;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Main
 {
     class Program
     {
-        public static void ConsoleOutput(object sender, string input, (string, float) result)
+        public static void ConsoleOutput(object sender, ImageRepresentation result)
         {
-            string ImagePath = input;
-            (string clas, float prob) = result;
-            Console.WriteLine($"{ImagePath} belongs to class {clas} with prob. - {prob}");
+            Console.WriteLine($"{result.ImageName} belongs to class {result.ClassName} with prob. - {result.Prob}");
 
         }
-        static async Task<int> Main(string[] args)
+        static int Main(string[] args)
         {
-            //Model MnistModel = new Model();
+            Model MnistModel = new Model();
 
-            //Stopwatch sw = new Stopwatch();
+            Stopwatch sw = new Stopwatch();
 
-            //sw.Start();
-            //Parallelizer<(string, float)> ModelParallelizer = new Parallelizer<(string, float)>(MnistModel);
-            //ModelParallelizer.OutputEvent += ConsoleOutput;
-            //ModelParallelizer.Run(args.FirstOrDefault() ?? "images");
-            //sw.Stop();
+            sw.Start();
+            Parallelizer<ImageRepresentation,ImageRepresentation> ModelParallelizer = new Parallelizer<ImageRepresentation,ImageRepresentation>(MnistModel);
+            ModelParallelizer.OutputEvent += ConsoleOutput;
 
-            //Console.WriteLine($"Time:{sw.ElapsedMilliseconds}");
+            string[] Files=null;
+            try
+            {
+                Files = Directory.GetFiles(args.FirstOrDefault() ?? "images", "*.*").Where(s => s.EndsWith(".bmp") || s.EndsWith(".jpg") ||
+                                                                                           s.EndsWith(".png") || s.EndsWith(".jpeg")).ToArray();
+
+                // 0 images found after LINQ filtering
+                if (Files == null) throw new ArgumentNullException("Files == NULL");
+                if (Files.Length == 0) throw new Exception("There is no images in the directory");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Wrong input"+ex.Message);
+            }
+
+            List<ImageRepresentation> Images = new List<ImageRepresentation>();
+            foreach (string FilePath in Files)
+            {
+                byte[] ByteImage = File.ReadAllBytes(FilePath);
+                Images.Add(new ImageRepresentation { ImageName = FilePath, Base64Image = Convert.ToBase64String(ByteImage) });
+            }
+
+            ModelParallelizer.Run(Images);
+            sw.Stop();
+
+            Console.WriteLine($"Time:{sw.ElapsedMilliseconds}");
 
             //using var db = new LibraryContext();
 
@@ -43,17 +68,6 @@ namespace Main
             //        Console.WriteLine($"-- id:{img.ImageInfoId} name:{img.ClassName} prob:{img.Prob} get:{img.NumOfRequests} path:{img.Path} hash:{img.ImageHash} Image:{img.ByteImage.Img}");
 
             //}
-            ////MnistModel.ClearDataBase();
-            HttpClient client = new HttpClient();
-            string result = await client.GetStringAsync("http://localhost:5000/images/all");
-            var allimages = JsonConvert.DeserializeObject<ImageInfo[]>(result);
-
-            //var nb = new NewBook() { Title = "C", Pages = 400 };
-            //var s = JsonConvert.SerializeObject(nb);
-            //var c = new StringContent(s);
-            //c.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            //await client.PutAsync("http://localhost:5000/api/books", c);
-
             return 0;
         }
     }

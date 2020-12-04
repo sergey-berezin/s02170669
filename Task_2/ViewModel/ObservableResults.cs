@@ -38,10 +38,10 @@ namespace ViewModel
             }
         }
 
-        public Image(byte [] img, string info)
+        public Image(byte [] Img, string Info)
         {
-            this.file = ByteToImage(img);
-            this.info = info;
+            this.file = ByteToImage(Img);
+            this.info = Info;
         }
 
         public static ImageSource ByteToImage(byte[] imageData)
@@ -156,9 +156,12 @@ namespace ViewModel
 
         public void AddResults(List<ImageRepresentation> Results)
         {
-            foreach (ImageRepresentation Result in Results)
+            if (Results != null)
             {
-                AddResult(Result.Base64Image, Result.ClassName, Result.Prob.ToString());
+                foreach (ImageRepresentation Result in Results)
+                {
+                    AddResult(Result.Base64Image, Result.ClassName, Result.Prob.ToString());
+                }
             }
         }
     }
