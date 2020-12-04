@@ -1,22 +1,27 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-
+using System.IO;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using ImageContracts;
 namespace ViewModel
 {
 
 
     public class Image
     {
-        private string path;
-        public string Path
+        private ImageSource file;
+        public ImageSource File
         {
             get
             {
-                return path;
+                return file;
             }
             set
             {
-                path = value;
+                file = value;
             }
         }
 
@@ -33,12 +38,26 @@ namespace ViewModel
             }
         }
 
-        public Image(string path, string info)
+        public Image(byte [] img, string info)
         {
-            this.path = path;
+            this.file = ByteToImage(img);
             this.info = info;
         }
+
+        public static ImageSource ByteToImage(byte[] imageData)
+        {
+            BitmapImage biImg = new BitmapImage();
+            MemoryStream ms = new MemoryStream(imageData);
+            biImg.BeginInit();
+            biImg.StreamSource = ms;
+            biImg.EndInit();
+
+            ImageSource ImgSrc = biImg as ImageSource;
+
+            return ImgSrc;
+        }
     }
+
     public class Results : INotifyPropertyChanged
     {
         private string class_name;
@@ -89,13 +108,13 @@ namespace ViewModel
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public Results(string Class_Name, string ImagePath, string ImageInfo)
+        public Results(string Img, string ClassName, string Info)
         {
-            this.class_name = Class_Name;
+            this.class_name = ClassName;
             this.count = 1;
             this.images = new ObservableCollection<Image>
             {
-                new Image(ImagePath, ImageInfo)
+                new Image(Convert.FromBase64String(Img), Info)
             };
 
         }
@@ -104,23 +123,43 @@ namespace ViewModel
 
     public class ObservableResults : ObservableCollection<Results>
     {
-        public void Add_Result(string Class_Name, string ImagePath, string ImageInfo)
+        public ObservableResults() { }
+        public ObservableResults(List<ImageRepresentation> Images)
+        {
+            AddResults(Images);
+        }
+
+        public void AddResult(string Img, string ClassName, string Info)
         {
 
             foreach (var Result in base.Items)
             {
-                if (Result.Class_Name.Equals(Class_Name))
+                if (Result.Class_Name.Equals(ClassName))
                 {
                     base[base.IndexOf(Result)].Count += 1;
-                    base[base.IndexOf(Result)].Images.Add(new Image(ImagePath, ImageInfo));
+                    base[base.IndexOf(Result)].Images.Add(new Image(Convert.FromBase64String(Img), Info));
 
                     return;
                 }
             }
 
-            base.Add(new Results(Class_Name, ImagePath, ImageInfo));
+            base.Add(new Results(Img, ClassName, Info));
             return;
 
+        }
+
+        public void AddResults(List<(string, string, float)> Results)
+        {
+            foreach ((string, string, float) Result in Results)
+                AddResult(Result.Item1, Result.Item2, Result.Item3.ToString());
+        }
+
+        public void AddResults(List<ImageRepresentation> Results)
+        {
+            foreach (ImageRepresentation Result in Results)
+            {
+                AddResult(Result.Base64Image, Result.ClassName, Result.Prob.ToString());
+            }
         }
     }
 }

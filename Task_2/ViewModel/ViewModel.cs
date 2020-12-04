@@ -8,6 +8,10 @@ using System.ComponentModel;
 using System.IO;
 using SQL;
 using System.Collections.Generic;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Windows;
+using ImageContracts;
 
 namespace ViewModel
 {
@@ -16,6 +20,7 @@ namespace ViewModel
         string OpenPath();
 
         Dispatcher GetDispatcher();
+        void Message(string MessageString, string CaptionString, MessageBoxButton Button, MessageBoxImage Icon);
 
     }
 
@@ -26,22 +31,61 @@ namespace ViewModel
         {
             this.uiServices = uiServices;
 
-            ModelParallelizer.OutputEvent += Output;
+            //ModelParallelizer.OutputEvent += Output;
 
             startCommand = new RelayCommand(_ => !Running,
                                             async _ =>
                                             {
-                                                string path = uiServices.OpenPath();
-                                                if (path != null)
+                                                string Path = uiServices.OpenPath();
+                                                //if (Path != null)
+                                                //{
+                                                //    results.Clear();
+                                                //    images.Clear();
+
+                                                //    Running = true;
+
+                                                //    await Task.Run(() => ModelParallelizer.Run(Path));
+
+                                                //    Running = false;
+                                                //}
+
+
+
+                                                string[] Files = Directory.GetFiles(Path);
+                                                List<ImageRepresentation> Images = new List<ImageRepresentation>();
+                                                foreach(string FilePath in Files)
                                                 {
+                                                    byte[] ByteImage = File.ReadAllBytes(FilePath);
+                                                    Images.Add(new ImageRepresentation {ImageName=FilePath, Base64Image=Convert.ToBase64String(ByteImage) });
+                                                    
+                                                }
+
+                                                try
+                                                {
+                                                    HttpClient client = new HttpClient();
+                                                    var s = JsonConvert.SerializeObject(Images);
+                                                    var c = new StringContent(s);
+                                                    c.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                                                    HttpResponseMessage result = await client.PutAsync("http://localhost:5000/images", c);
+
+                                                    string content = await result.Content.ReadAsStringAsync();
+                                                    List<ImageRepresentation> ResultImages = JsonConvert.DeserializeObject<List<ImageRepresentation>>(content);
+
                                                     results.Clear();
                                                     images.Clear();
 
-                                                    Running = true;
+                                                    await this.uiServices.GetDispatcher().BeginInvoke(new Action(() =>
+                                                     {
+                                                         results.AddResults(ResultImages);
+                                                     }));
 
-                                                    await Task.Run(() => ModelParallelizer.Run(path));
 
-                                                    Running = false;
+
+
+                                                }
+                                                catch (System.Net.Http.HttpRequestException ex)
+                                                {
+                                                    uiServices.Message("Server is not available: "+ ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                                 }
                                             }
                                            );
@@ -49,21 +93,45 @@ namespace ViewModel
             stopCommand = new RelayCommand(_ => Running,
                                            _ =>
                                            {
-                                               ModelParallelizer.Stop();
+                                               //ModelParallelizer.Stop();
                                                Running = false;
                                            }
                                            );
             clearCommand = new RelayCommand(_ => true,
-                                           _ =>
+                                           async _ =>
                                            {
-                                               MnistRecognizer.ClearDataBase();
+                                               try
+                                               {
+                                                   HttpClient client = new HttpClient();
+                                                   HttpResponseMessage result = await client.DeleteAsync("http://localhost:5000/images/");
+                                                   string message = await result.Content.ReadAsStringAsync();
+                                                   uiServices.Message(message, "Server response", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                                               }
+                                               catch (System.Net.Http.HttpRequestException ex)
+                                               {
+                                                   uiServices.Message("Server is not available: " + ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                               }
+
                                            }
                                            );
             statsCommand = new RelayCommand(_ => true,
                                           async _ =>
-                                          {
-                                              await Task.Run(() => StatisticResults = MnistRecognizer.GetModelStatistics());
-                                              PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatisticResults"));
+                                          {                                      
+                                              try
+                                              {
+                                                    HttpClient client = new HttpClient();
+                                                    string result = await client.GetStringAsync("http://localhost:5000/images/statistics");
+
+                                                    StatisticResults = JsonConvert.DeserializeObject<List<ImageRepresentation>>(result);
+                                                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatisticResults"));
+
+                                              }
+                                              catch (System.Net.Http.HttpRequestException ex)
+                                              {
+                                                  uiServices.Message("Server is not available" + ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                              }
+
                                           }
                                           );
         }
@@ -73,15 +141,15 @@ namespace ViewModel
 
         private static Model MnistRecognizer = new Model(ModelPath: Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\Task_1\\RecognitionModel\\mnist-8.onnx");
 
-        private static Parallelizer<(string,float)> ModelParallelizer = new Parallelizer<(string,float)>(MnistRecognizer);
+        //private static Parallelizer<byte[],(string, float)> ModelParallelizer = new Parallelizer<byte[], (string,float)>(MnistRecognizer);
 
-        private static ObservableResults results = new ObservableResults();
+        private static ObservableResults results = new ObservableResults(GetDatabaseImagesAsync());
 
-        private static Results selectedclass = new Results(null, null, null);
+        private static Results selectedclass;
 
         private static ObservableCollection<Image> images = new ObservableCollection<Image>();
 
-        public List<ImageInfo> StatisticResults { get; set; }
+        public List<ImageRepresentation> StatisticResults { get; set; }
 
 
         public Results SelectedClass
@@ -136,17 +204,35 @@ namespace ViewModel
         private readonly ICommand statsCommand;
         public ICommand StatsCommand { get { return statsCommand; } }
 
-        public void Output(object sender, string input, (string,float) result)
+        //public void Output(object sender, byte[] image, (string,float) result)
+        //{
+        //    string ImagePath = input;
+        //    (string class_name, float prob) = result;
+
+        //    this.uiServices.GetDispatcher().BeginInvoke(new Action(() =>
+        //    {
+        //        results.AddResult(class_name, ImagePath, prob.ToString());
+        //    }));
+             
+
+        //}
+
+        public static List<ImageRepresentation> GetDatabaseImagesAsync()
         {
-            string ImagePath = input;
-            (string class_name, float prob) = result;
-
-            this.uiServices.GetDispatcher().BeginInvoke(new Action(() =>
+            try
             {
-                results.Add_Result(class_name, ImagePath, prob.ToString());
-            }));
+                HttpClient client = new HttpClient();
+                string result = client.GetStringAsync("http://localhost:5000/images/all").Result;
 
+                return JsonConvert.DeserializeObject<List<ImageRepresentation>>(result);
 
+            }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                //uiServices.Message("Server images can't be loaded" + ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            return null;
         }
 
     }

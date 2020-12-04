@@ -25,11 +25,11 @@ namespace SQL
     public class ImageInfo
     {
         public int ImageInfoId { get; set; }
+        public string ImageName { get; set; }
         public string ClassName { get; set; }
         public float Prob { get; set; }
         [ConcurrencyCheck]
         public int NumOfRequests { get; set; }
-        public string Path { get; set; }
         public string ImageHash { get; set; }
         public ImageFile ByteImage { get; set; }
 
@@ -53,7 +53,7 @@ namespace SQL
         //    Database.EnsureCreated();
         //}
         protected override void OnConfiguring(DbContextOptionsBuilder o)
-            => o.UseSqlite($"Data Source={Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\Task_1\\SQL\\ImageDataBase.db"}");
+            => o.UseSqlite(@"Data Source=C:\Users\Владислав\Desktop\s02170669\Task_1\SQL\ImageDataBase.db");
     }
 
     //o.UseSqlite($"Data Source={Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName + "\\Task_1\\SQL\\ImageDataBase.db"}"

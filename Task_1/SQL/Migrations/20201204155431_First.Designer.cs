@@ -9,7 +9,7 @@ using SQL;
 namespace SQL.Migrations
 {
     [DbContext(typeof(LibraryContext))]
-    [Migration("20201122112312_First")]
+    [Migration("20201204155431_First")]
     partial class First
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,12 +76,12 @@ namespace SQL.Migrations
                     b.Property<string>("ImageHash")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ImageName")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("NumOfRequests")
                         .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Path")
-                        .HasColumnType("TEXT");
 
                     b.Property<float>("Prob")
                         .HasColumnType("REAL");

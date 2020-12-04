@@ -14,10 +14,11 @@ using SQL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using ImageContracts;
 
 namespace RecognitionModel
 {
-    public class Model: IProcess<string,(string,float)>
+    public class Model: IProcess<ImageRepresentation, ImageRepresentation>
     {
 
         string modelpath;
@@ -53,38 +54,39 @@ namespace RecognitionModel
             this.session = new InferenceSession(modelpath);
         }
 
-        public (string,float) ProcessFile(string ImgPath)
+        public ImageRepresentation ProcessFile(ImageRepresentation Img)
         {
+            byte[] ByteImage = Convert.FromBase64String(Img.Base64Image);
 
-            byte[] ByteImage = File.ReadAllBytes(ImgPath);
             string hash = Hash.GetHash(ByteImage);
+            Img.ImageHash = hash;
 
             using (var db = new LibraryContext())
             {
-                string name = "";
-                float prob = 0;
-                foreach (var imageclass in db.ImageClasses.Include(a => a.Images))
-                {
-                    foreach (var img in imageclass.Images)
-                        if (Hash.VerifyHash(hash, img.ImageHash))
-                        {
-                            img.NumOfRequests += 1; 
-                            db.Entry(img).Reference(a => a.ByteImage).Load();
-                            if (Hash.ByteArrayCompare(ByteImage, img.ByteImage.Img))
+                bool found = false;
+                foreach (var img in db.Images)
+                    if (Hash.VerifyHash(hash, img.ImageHash))
+                    {
+                        db.Entry(img).Reference(a => a.ByteImage).Load();
+                        if (Hash.ByteArrayCompare(ByteImage, img.ByteImage.Img))
                             {
-                                name = imageclass.ClassName;
-                                prob = img.Prob;
+                                img.NumOfRequests += 1;
+                                Img.ClassName = img.ClassName;
+                                Img.Prob = img.Prob;
+                                Img.ImageId = img.ImageInfoId;
+                                Img.NumOfRequests = img.NumOfRequests;
+
+                                found = true;
                                 break;
                                 
                             }
-                        }
-                    if (name != "") break;
-                }
+                    }
+                    
 
-                if (name != "")
+                if (found)
                 {
                     SaveDataBaseConcurrent(db, null);
-                    return (name, prob);
+                    return Img;
                 }
 
             }
@@ -129,7 +131,7 @@ namespace RecognitionModel
 
             using (var db = new LibraryContext())
             {
-                var NewImage = new ImageInfo() { ClassName = maxClass, Prob = maxValue, Path = ImgPath, NumOfRequests = 0, ImageHash =hash, ByteImage = new ImageFile { Img = ByteImage } };
+                var NewImage = new ImageInfo() { ClassName = maxClass, Prob = maxValue, ImageName=Img.ImageName, NumOfRequests = 0, ImageHash =hash, ByteImage = new ImageFile { Img = ByteImage } };
                 NewImage.ImageClasses = new List<ImageClass>();
 
                 var ClassNum = db.ImageClasses.Where(a => a.ClassName == maxClass).FirstOrDefault();
@@ -158,32 +160,13 @@ namespace RecognitionModel
                 db.SaveChanges();
             }
 
-            return (maxClass, maxValue);
+            Img.NumOfRequests = 0;
+            Img.ClassName = maxClass;
+            Img.Prob = maxValue;
+            return Img;
             
         }
 
-        public void ClearDataBase()
-        {
-            using (var db = new LibraryContext())
-            {
-                db.ImageClasses.RemoveRange(db.ImageClasses);
-                db.Images.RemoveRange(db.Images);
-                db.SaveChanges();
-            }
-        }
-
-        public List<ImageInfo> GetModelStatistics()
-        {
-            List <ImageInfo> ImageList = new List<ImageInfo>();
-            using (var db = new LibraryContext())
-            {
-                foreach(var img in db.Images)
-                {
-                    ImageList.Add(img);
-                }
-            }
-            return ImageList;
-        }
 
         static private void SaveDataBaseConcurrent(LibraryContext db, IReadOnlyList<EntityEntry> entries)
         {

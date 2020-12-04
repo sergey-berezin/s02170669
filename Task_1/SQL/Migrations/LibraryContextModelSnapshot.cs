@@ -74,12 +74,12 @@ namespace SQL.Migrations
                     b.Property<string>("ImageHash")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ImageName")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("NumOfRequests")
                         .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Path")
-                        .HasColumnType("TEXT");
 
                     b.Property<float>("Prob")
                         .HasColumnType("REAL");

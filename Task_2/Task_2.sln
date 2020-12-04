@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecognitionModel", "..\Task
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQL", "..\Task_1\SQL\SQL.csproj", "{BEFF665E-F7B8-4282-A16F-F327761C9F27}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageContracts", "..\Task_1\ImageContracts\ImageContracts.csproj", "{6E6B2C8B-503E-4C30-9F4D-70DC1131C23D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{BEFF665E-F7B8-4282-A16F-F327761C9F27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEFF665E-F7B8-4282-A16F-F327761C9F27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEFF665E-F7B8-4282-A16F-F327761C9F27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E6B2C8B-503E-4C30-9F4D-70DC1131C23D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E6B2C8B-503E-4C30-9F4D-70DC1131C23D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E6B2C8B-503E-4C30-9F4D-70DC1131C23D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E6B2C8B-503E-4C30-9F4D-70DC1131C23D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

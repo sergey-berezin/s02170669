@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ImageServer.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SQL;
+using ImageContracts;
 
 namespace ImageServer.Controllers
 {
@@ -11,11 +14,35 @@ namespace ImageServer.Controllers
     [Route("[controller]")]
     public class ImagesController : ControllerBase
     {
+        private IImageDB DB;
 
-        [HttpGet("stats")]
-        public string GetStats()
+        public ImagesController(IImageDB db)
         {
-            return "test";
+            this.DB = db;
+        }
+
+        [HttpGet("statistics")]
+        public List<ImageRepresentation> GetStatistics()
+        {
+            return DB.GetStatistics();
+        }
+
+        [HttpGet("all")]
+        public List<ImageRepresentation> GetAllImages()
+        {
+            return DB.GetAllImages();
+        }
+
+        [HttpPut]
+        public List<ImageRepresentation> RecognizeImage(List<ImageRepresentation> Images)
+        {
+            return DB.RecognizeImage(Images);
+        }
+
+        [HttpDelete]
+        public string ClearDataBase()
+        {
+            return DB.ClearDatabase();
         }
     }
 }

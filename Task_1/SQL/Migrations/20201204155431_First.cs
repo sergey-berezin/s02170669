@@ -39,10 +39,10 @@ namespace SQL.Migrations
                 {
                     ImageInfoId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    ImageName = table.Column<string>(type: "TEXT", nullable: true),
                     ClassName = table.Column<string>(type: "TEXT", nullable: true),
                     Prob = table.Column<float>(type: "REAL", nullable: false),
                     NumOfRequests = table.Column<int>(type: "INTEGER", nullable: false),
-                    Path = table.Column<string>(type: "TEXT", nullable: true),
                     ImageHash = table.Column<string>(type: "TEXT", nullable: true),
                     ByteImageImageFileId = table.Column<int>(type: "INTEGER", nullable: true)
                 },

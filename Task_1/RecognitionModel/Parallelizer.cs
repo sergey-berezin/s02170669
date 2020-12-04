@@ -2,25 +2,28 @@ using System;
 using System.Threading;
 using System.Linq;
 using System.IO;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace RecognitionModel
 {
 
-    public delegate void OutputHandler<Out>(object sender, string input, Out result);
+    public delegate void OutputHandler<In,Out>(object sender, In input, Out result);
+    public delegate void OutputHandler<Out>(object sender, Out result);
     public interface IProcess <In,Out>
     {
         Out ProcessFile(In Input);
 
     }
 
-    public class Parallelizer <Out>
+    public class Parallelizer <In, Out>
     {
         static CancellationTokenSource cts = new CancellationTokenSource();
         
-        IProcess<string,Out> model;
-        public event OutputHandler<Out> OutputEvent;
+        IProcess<In,Out> model;
+        public event OutputHandler<In, Out> OutputEvent;
 
-        public Parallelizer(IProcess<string,Out> model)
+        public Parallelizer(IProcess<In,Out> model)
         {
             this.model = model;
         }
@@ -30,13 +33,12 @@ namespace RecognitionModel
             cts.Cancel();
         }
 
-        public void Run(string Path)
+        public List<Out> Run(List<In> Files)
         {
+            ConcurrentQueue<Out> queue = new ConcurrentQueue<Out>();
             int NumOfThreads = Environment.ProcessorCount;
 
             cts = new CancellationTokenSource();
-
-            string[] Files = Directory.GetFiles(Path);
 
             Thread[] threads = new Thread[NumOfThreads];
 
@@ -58,6 +60,7 @@ namespace RecognitionModel
                         {
                             Out output = model.ProcessFile(Files[FileNum]);
                             OutputEvent?.Invoke(this, Files[FileNum], output);
+                            queue.Enqueue(output);
 
                         }
                     }
@@ -68,9 +71,11 @@ namespace RecognitionModel
             }
 
              for (int i = 0; i < NumOfThreads; i++)
-            {
+             {
                 threads[i].Join();
-            }
+             }
+
+            return queue.ToList();
 
         }
 
