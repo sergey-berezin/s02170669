@@ -174,19 +174,22 @@ namespace ViewModel
                                            );
             statsCommand = new RelayCommand(_ => true,
                                           async _ =>
-                                          {                                      
-                                              try
+                                          {
+                                              if (UseServer)
                                               {
-                                                    HttpClient client = new HttpClient();
-                                                    string result = await client.GetStringAsync("http://localhost:5000/images/statistics");
+                                                  try
+                                                  {
+                                                      HttpClient client = new HttpClient();
+                                                      string result = await client.GetStringAsync("http://localhost:5000/images/statistics");
 
-                                                    StatisticResults = JsonConvert.DeserializeObject<List<ImageRepresentation>>(result);
-                                                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatisticResults"));
+                                                      StatisticResults = JsonConvert.DeserializeObject<List<ImageRepresentation>>(result);
+                                                      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StatisticResults"));
 
-                                              }
-                                              catch (System.Net.Http.HttpRequestException ex)
-                                              {
-                                                  uiServices.Message("Server is not available" + ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                  }
+                                                  catch (System.Net.Http.HttpRequestException ex)
+                                                  {
+                                                      uiServices.Message("Server is not available" + ex.Message, "Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                  }
                                               }
 
                                           }

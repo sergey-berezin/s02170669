@@ -20,7 +20,8 @@ namespace ImageServer
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+
+            Host.CreateDefaultBuilder(args).ConfigureLogging(l => { l.AddConsole().SetMinimumLevel(LogLevel.Trace); })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

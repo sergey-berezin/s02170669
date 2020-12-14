@@ -33,8 +33,14 @@ namespace ImageServer.Controllers
             return DB.GetAllImages();
         }
 
+        [HttpGet("{id}")]
+        public List<ImageRepresentation> GetImages(string id)
+        {
+            return DB.GetImages(id);
+        }
+
         [HttpPut]
-        public List<ImageRepresentation> RecognizeImage(List<ImageRepresentation> Images)
+        public List<ImageRepresentation> RecognizeImage([FromBody] List<ImageRepresentation> Images)
         {
             return DB.RecognizeImage(Images);
         }

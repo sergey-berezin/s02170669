@@ -27,6 +27,7 @@ namespace ImageServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSwaggerDocument();
             services.AddSingleton<IImageDB>(new ServerDatabase());
         }
 
@@ -37,10 +38,13 @@ namespace ImageServer
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            
             //app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseCors(b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseOpenApi();
+            app.UseSwaggerUi3();
 
             //app.UseAuthorization();
 

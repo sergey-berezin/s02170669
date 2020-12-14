@@ -14,6 +14,7 @@ namespace ImageServer.Database
     {
         List<ImageRepresentation> GetStatistics();
         List<ImageRepresentation> GetAllImages();
+        List<ImageRepresentation> GetImages(string id);
         List<ImageRepresentation> RecognizeImage(List<ImageRepresentation> Images);
 
         string ClearDatabase();
@@ -63,14 +64,37 @@ namespace ImageServer.Database
             // Important! Return all images including ByteImage arrays
             return ImageList;
         }
+        public List<ImageRepresentation> GetImages(string id)
+        {
+            List<ImageRepresentation> ImageList = new List<ImageRepresentation>();
+            using (var db = new LibraryContext())
+            {
+                foreach (var img in db.Images.Where(a => a.ClassName==id).Include(a => a.ByteImage))
+                {
+                    ImageList.Add(new ImageRepresentation
+                    {
+                        ImageId = img.ImageInfoId,
+                        ImageName = img.ImageName,
+                        ClassName = img.ClassName,
+                        NumOfRequests = img.NumOfRequests,
+                        ImageHash = img.ImageHash,
+                        Prob = img.Prob,
+                        Base64Image = Convert.ToBase64String(img.ByteImage.Img)
+                    });
+                }
+            }
+            // Important! Return all images including ByteImage arrays
+            return ImageList;
+        }
+
         public List<ImageRepresentation> RecognizeImage(List<ImageRepresentation> Images)
         {
             Model MnistModel = new Model(ModelPath: Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName + "\\Task_1\\RecognitionModel\\mnist-8.onnx");
 
             Parallelizer<ImageRepresentation, ImageRepresentation> ModelParallelizer = new Parallelizer<ImageRepresentation, ImageRepresentation>(MnistModel, UseServer:true);
             List<ImageRepresentation> result = ModelParallelizer.Run(Images);
-            foreach(var l in result)
-                Console.WriteLine(l.ClassName, l.Prob);
+
+            Console.WriteLine(result[0].ClassName);
             return result;
         }
 
@@ -83,7 +107,7 @@ namespace ImageServer.Database
                     db.ImageClasses.RemoveRange(db.ImageClasses);
                     db.Images.RemoveRange(db.Images);
                     db.SaveChanges();
-                    return "Database cleared";
+                    return "Database is cleared";
                 }
             }
             catch(Exception ex)

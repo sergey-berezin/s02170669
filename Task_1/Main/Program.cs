@@ -68,6 +68,13 @@ namespace Main
             //        Console.WriteLine($"-- id:{img.ImageInfoId} name:{img.ClassName} prob:{img.Prob} get:{img.NumOfRequests} path:{img.Path} hash:{img.ImageHash} Image:{img.ByteImage.Img}");
 
             //}
+
+            //HttpClient client = new HttpClient();
+            //string result = client.GetStringAsync("http://localhost:5000/images/1").Result;
+            //var allbooks = JsonConvert.DeserializeObject<ImageRepresentation[]>(result);
+            //foreach (var b in allbooks)
+            //    Console.WriteLine($"{b.ClassName}");
+
             return 0;
         }
     }
