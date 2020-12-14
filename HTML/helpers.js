@@ -101,9 +101,9 @@ async function handleSendFiles()
             let image = document.createElement("img");
             image.src = URL.createObjectURL(this.files[i]);
             image.id = this.files[i].name;
-            image.height = 28;
+            image.height = 56;
             image.crossOrigin = 'anonymous';
-            image.width = 28;
+            image.width = 56;
             image.onload = function()
             {
                     //URL.revokeObjectURL(this.src);
@@ -132,7 +132,7 @@ async function handleSendFiles()
                 // create base64 string from image
                 var myCanvas = document.getElementById('mycanvas');
                 var ctx = myCanvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, img.width*10, img.height*10);
+                ctx.drawImage(img, 0, 0, img.width*5, img.height*5);
                 var myDataURL=myCanvas.toDataURL('image/png');
                 var myBase64Data = myDataURL.split(',')[1];
                 
@@ -158,7 +158,7 @@ async function handleSendFiles()
             }
         });
         const json = await response.json();
-        
+
         for(let i=0; i<json.length; i++)
         {
             let inf = document.getElementById("info_"+json[i]["imageName"]);
@@ -171,58 +171,3 @@ async function handleSendFiles()
     }
 
 }
-
-async function handleLoadFiles()
-{
-    if (!this.files.length)
-    {
-        fileList.innerHTML = "<p>No files selected!</p>";
-    }
-    else
-    {
-        // create list of images
-        fileList.innerHTML = "";
-        const list = document.createElement("ul");
-        fileList.appendChild(list);
-        for(let i=0; i<this.files.length; i++)
-        {   
-            // load and display image
-            const li = document.createElement("li");
-            list.appendChild(li);
-
-            let image = document.createElement("img");
-            image.src = URL.createObjectURL(this.files[i]);
-            image.height = 28;
-            image.crossOrigin = 'anonymous';
-            image.width = 28;
-            image.id = this.files[i].name;
-            //image.onload = function()
-            //{
-                   // URL.revokeObjectURL(this.src);
-                
-            //}
-            li.appendChild(image);
-
-            // add image info
-            const info = document.createElement("span");
-            info.id = "info_" + this.files[i].name;
-            info.innerHTML = + this.files[i].name;
-            li.appendChild(info);
-        }
-    }
-}
-
-async function HandleRecognize()
-{
-    descendents = fileList.getElementsByTagName('*');
-
-}
-function getBase64Image(img) {
-    var canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    var dataURL = canvas.toDataURL("image/png");
-    return dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-  }
