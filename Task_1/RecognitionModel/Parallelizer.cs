@@ -2,26 +2,42 @@ using System;
 using System.Threading;
 using System.Linq;
 using System.IO;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace RecognitionModel
 {
 
-    public delegate void OutputHandler(object sender, params object[] args);
-    public interface IProcess
+    public delegate void OutputHandler<In,Out>(object sender, In input, Out result);
+    public delegate void OutputHandler<Out>(object sender, Out result);
+    public interface IProcess <In,Out>
     {
-        object ProcessFile(object Obj);
+        Out ProcessFile(In Input);
+
     }
 
-    public class Parallelizer
+    public class Parallelizer <In, Out>
     {
         static CancellationTokenSource cts = new CancellationTokenSource();
         
-        IProcess model;
-        public event OutputHandler OutputEvent;
-
-        public Parallelizer(IProcess model)
+        IProcess<In,Out> model;
+        public event OutputHandler<Out> OutputEvent;
+        bool useServer;
+        public bool UseServer
         {
-            this.model = model;
+            get
+            {
+                return useServer;
+            }
+            set
+            {
+                useServer = value;
+            }
+        }
+        public Parallelizer(IProcess<In,Out> Model, bool UseServer=false)
+        {
+            this.model = Model;
+            this.useServer = UseServer;
         }
 
         public void Stop()
@@ -29,17 +45,18 @@ namespace RecognitionModel
             cts.Cancel();
         }
 
-        public void Run(string Path)
+        public List<Out> Run(List<In> Files)
         {
+            ConcurrentQueue<Out> queue = new ConcurrentQueue<Out>();
+            int NumOfThreads = Environment.ProcessorCount;
 
             cts = new CancellationTokenSource();
-            string[] Files = Directory.GetFiles(Path);
 
-            Thread[] threads = new Thread[Environment.ProcessorCount];
+            Thread[] threads = new Thread[NumOfThreads];
 
             int processed = -1;
 
-            for (int i = 0; i < Environment.ProcessorCount; i++)
+            for (int i = 0; i < NumOfThreads; i++)
             {
                 threads[i] = new Thread(()=>
                 {
@@ -53,8 +70,10 @@ namespace RecognitionModel
                             break;
                         else
                         {
-                            object output = model.ProcessFile(Files[FileNum]);
-                            OutputEvent?.Invoke(this, Files[FileNum], output);
+                            Out output = model.ProcessFile(Files[FileNum]);
+                            if(!UseServer)
+                                OutputEvent?.Invoke(this, output);
+                            queue.Enqueue(output);
 
                         }
                     }
@@ -64,10 +83,12 @@ namespace RecognitionModel
                 threads[i].Start();
             }
 
-             for (int i = 0; i < Environment.ProcessorCount; i++)
-            {
+             for (int i = 0; i < NumOfThreads; i++)
+             {
                 threads[i].Join();
-            }
+             }
+
+            return queue.ToList();
 
         }
 

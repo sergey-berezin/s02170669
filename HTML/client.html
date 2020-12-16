@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Image Recognizer</title>
+</head>
+
+<body>
+    <canvas width="300" height="300" id="mycanvas" style="display: none;"></canvas>
+    <input type="file" id="fileElem" multiple accept="image/*" style="display:none">
+    <button id="fileGetAll">Get all images</button>
+    <button Id="fileLoadNew">Recognize image</button>
+    <button Id="fileGetClass">Get Class</button>
+    <input id="Txt" class="width150" type="text"/>
+    <div id="fileList">
+        <p>No files selected!</p>
+    </div>
+    <script src="helpers.js"></script>
+    <script>
+        const fileGetAll = document.getElementById("fileGetAll");
+        const fileLoadNew = document.getElementById("fileLoadNew");
+        const fileGetClass = document.getElementById("fileGetClass");
+        fileElem = document.getElementById("fileElem");
+        fileList = document.getElementById("fileList");
+
+        fileLoadNew.addEventListener("click", function (e)
+        {
+           if (fileElem)
+            {
+                fileElem.click();
+            }
+        }, false);
+
+        fileElem.addEventListener("change", handleSendFiles, false);
+
+        fileGetAll.addEventListener("click", handleFiles, false);
+        fileGetClass.addEventListener("click", handleClass, false);
+        
+
+    </script>
+</body>

@@ -6,13 +6,16 @@
         xmlns:local="clr-namespace:View"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="1350">
+    
     <Grid>
         <Menu Height="20" VerticalAlignment="Top" Background="#FFB3D7D7" Margin="0,0,0.333,0">
 
+            <CheckBox Content="Use Server" IsChecked="{Binding Path=UseServer}" Margin="0,1,0,0"/>
             <MenuItem Header="Start Recognition" Command="{Binding StartCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Stop Recognition" Command="{Binding StopCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Clear DataBase" Command="{Binding ClearCommand}" CommandParameter="FromMenuItem"/>
             <MenuItem Header="Show Statistics" Command="{Binding StatsCommand}" CommandParameter="FromMenuItem"/>
+            <ProgressBar Height="10" Value="{Binding Path= Progress}"  Width="100" Margin="0,3,0,0" x:Name="Pbar" IsIndeterminate="{Binding Path=IndeterminedPBar}"/>
 
         </Menu>
 
@@ -22,7 +25,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="{Binding Path}" Width="100" Height="100"  Margin="50,10,0,10"/>
+                        <Image Source="{Binding File}" Width="100" Height="100"  Margin="50,10,0,10"/>
                         <TextBlock Text="{Binding Info}" Margin="60,55,0,10"/>
                     </StackPanel>
                 </DataTemplate>
@@ -46,7 +49,7 @@
             <ListView.View>
                 <GridView>
                     <GridView.Columns>
-                        <GridViewColumn Header="Image Path" DisplayMemberBinding="{Binding Path=Path}" Width="340"></GridViewColumn>
+                        <GridViewColumn Header="Image Path" DisplayMemberBinding="{Binding Path=ImageName}" Width="340"></GridViewColumn>
                         <GridViewColumn Header="Num of Requests" DisplayMemberBinding="{Binding Path=NumOfRequests}" Width="110"></GridViewColumn>
                     </GridView.Columns>
                 </GridView>

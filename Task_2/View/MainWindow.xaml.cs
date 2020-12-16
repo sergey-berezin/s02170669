@@ -15,6 +15,7 @@ namespace View
             InitializeComponent();
             Title = "Image Classifier. Pyatov Vladislav, 401 group.";
             DataContext = new ViewModel.ViewModel(new MyAppUIServices(this.Dispatcher));
+
         }
     }
 
@@ -43,5 +44,9 @@ namespace View
             return this.dispatcher;
         }
 
+        public void Message(string MessageString, string CaptionString, MessageBoxButton Button, MessageBoxImage Icon)
+        {
+            MessageBox.Show(MessageString, CaptionString, Button, Icon);
+        }
     }
 }

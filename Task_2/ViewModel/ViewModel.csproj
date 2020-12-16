@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Collections" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Task_1\ImageContracts\ImageContracts.csproj" />
     <ProjectReference Include="..\..\Task_1\RecognitionModel\RecognitionModel.csproj" />
   </ItemGroup>
 
